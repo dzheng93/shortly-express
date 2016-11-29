@@ -284,6 +284,34 @@ describe('', function() {
       });
     });
 
+    it('Encrypts the user password with salt', function(done) {
+      var options = {
+        'method': 'POST',
+        'uri': 'http://127.0.0.1:4568/signup',
+        'json': {
+          'username': 'Svnh',
+          'password': 'Svnh'
+        }
+      };
+
+      request(options, function(error, res, body) {
+        db.knex('users')
+          .where('username', '=', 'Svnh')
+          .then(function(res) {
+            if (res[0]) {
+              var salt = res[0]['salt'];
+            }
+            expect(salt).to.not.equal(undefined);
+            done();
+          }).catch(function(err) {
+            throw {
+              type: 'DatabaseError',
+              message: 'Failed to create test setup data'
+            };
+          });
+      });
+    });
+
   }); // 'Account Creation'
 
   describe('Account Login:', function() {
@@ -333,4 +361,32 @@ describe('', function() {
 
   }); // 'Account Login'
 
+  describe('Account Logout', function() {
+    var requestWithSession = request.defaults({jar: true});
+
+    beforeEach(function(done) {
+      new User({
+        'username': 'Phillip',
+        'password': 'Phillip'
+      }).save().then(function() {
+        done();
+      });
+    });
+
+    it('Redirects user to the login page after logout', function(done) {
+
+      request('http://127.0.0.1:4568/logout', function(error, res, body) {
+        expect(res.req.path).to.equal('/login');
+        done();
+      });
+
+    });
+
+    it('Ends the current session on user logout', function(done) {
+      request('http://127.0.0.1:4568/logout', function(error, res, body) {
+        expect(res.req.session).to.equal(undefined);
+        done();
+      });
+    });
+  });
 });

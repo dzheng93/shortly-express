@@ -58,13 +58,14 @@ function(req, res) {
 app.get('/links', 
 function(req, res) {
 
-  Links.reset().fetch().then(function(links) {
-    res.status(200).send(links.models);
-  });
 
   var sess = req.session;
   if (!sess.username) {
     res.redirect('/login');
+  } else {
+    Links.reset().fetch().then(function(links) {
+      res.status(200).send(links.models);
+    });
   }
 });
 
@@ -94,6 +95,10 @@ function(req, res) {
         })
         .then(function(newLink) {
           res.status(200).send(newLink);
+        })
+        .catch(function(error) {
+          console.log(error);
+          res.status(400);
         });
       });
     }
@@ -105,6 +110,7 @@ function(req, res) {
 /************************************************************/
 app.get('/logout', function(req, res) {
   req.session.destroy();
+  res.header('/login');
   res.redirect('/login');
 });
 
@@ -122,20 +128,26 @@ app.post('/login', function(req, res) {
      if (!model) {
        res.header('/login');
        res.redirect('/login');
+     } else {
+      
+       var salt = model.get('salt');
+       var hashedPass = model.get('password');
+       var passTest = bcrypt.hashSync(password, salt);
+
+       if (hashedPass === passTest) {
+         res.status(201);
+         req.session.username = username;
+         res.location('/');
+         res.redirect('/');
+
+       }
      }
 
-     var salt = model.get('salt');
-     var hashedPass = model.get('password');
-     var passTest = bcrypt.hashSync(password, salt);
 
-     if (hashedPass === passTest) {
-       res.status(201);
-       req.session.username = username;
-       res.location('/');
-       res.redirect('/');
-
-     }
-
+   })
+   .catch(function(error) {
+     console.log(error);
+     res.status(400);
    });
 });
 
@@ -170,8 +182,16 @@ app.post('/signup', function(req, res) {
         res.location('/');
         res.redirect('/');
 
+      })
+      .catch(function(error) {
+        console.log(error);
+        res.status(400);
       });
     }
+  })
+  .catch(function(error) {
+    console.log(error);
+    res.status(400);
   });
 });
 
