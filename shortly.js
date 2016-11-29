@@ -81,7 +81,7 @@ function(req, res) {
     return res.sendStatus(404);
   }
 
-  new Link({ url: uri }).fetch().then(function(found) {
+  new Link({ url: uri, userid: req.session.userId }).fetch().then(function(found) {
     if (found) {
       res.status(200).send(found.attributes);
     } else {
@@ -177,7 +177,7 @@ app.post('/signup', function(req, res) {
   .then(function(found) {
     if (found) {
       console.log('Account already exists');
-      res.redirect('/login');
+      res.redirect('/loging');
     } else {
       Users.create({
         username: username,
