@@ -111,16 +111,19 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+app.get('/logout', function(req, res) {
+  req.session.destroy();
+  res.redirect('/login');
+});
+
 app.get('/login', function(req, res) {
-  console.log('hello from login');
   res.render('login');
 });
+
 app.post('/login', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
 
-
-  
   User.query('where', 'username', '=', username)
    .fetch()
    .then(function(model) {
@@ -128,14 +131,10 @@ app.post('/login', function(req, res) {
        res.header('/login');
        res.redirect('/login');
      }
-     
+
      var salt = model.get('salt');
      var hashedPass = model.get('password');
-     console.log('password', password);
      var passTest = bcrypt.hashSync(password, salt);
-     console.log(model.get('username'));
-     console.log('hashedPass', hashedPass);
-     console.log('passTest', passTest);
 
      if (hashedPass === passTest) {
        res.status(201);
@@ -146,8 +145,6 @@ app.post('/login', function(req, res) {
      }
 
    });
-       // alert('Username or password is incorrect');
-
 });
 
 
@@ -155,6 +152,7 @@ app.get('/signup', function(req, res) {
   console.log('hello from signup');
   res.render('signup');
 });
+
 app.post('/signup', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
@@ -180,11 +178,9 @@ app.post('/signup', function(req, res) {
         res.location('/');
         res.redirect('/');
 
-
       });
     }
   });
-  // User.save(null, {method: 'insert'}); 
 });
 
 
