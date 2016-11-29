@@ -36,31 +36,23 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
 
-var loggedIn = function() {
-
+var checkUser = function(res, req) {
+  var sess = req.session;
+  if (sess.username) {
+    res.render('index');
+  } else {
+    res.redirect('/login');
+  }
 };
 
 app.get('/', 
 function(req, res) {
-  var sess = req.session;
-  // console.log(sess);
-  if (sess.username) {
-    res.render('index');
-  } else {
-    res.redirect('/login');
-  }
-
+  checkUser(res, req);
 });
 
 app.get('/create', 
 function(req, res) {
-  var sess = req.session;
-  // console.log(sess);
-  if (sess.username) {
-    res.render('index');
-  } else {
-    res.redirect('/login');
-  }
+  checkUser(res, req);
 });
 
 app.get('/links', 
