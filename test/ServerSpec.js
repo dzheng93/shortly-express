@@ -102,6 +102,27 @@ describe('', function() {
     });
 
     describe('Shortening links:', function() {
+      beforeEach(function(done) {
+      // create a user that we can then log-in with
+        new User({
+          'username': 'Phillip',
+          'password': 'Phillip'
+        }).save().then(function() {
+          var options = {
+            'method': 'POST',
+            'followAllRedirects': true,
+            'uri': 'http://127.0.0.1:4568/login',
+            'json': {
+              'username': 'Phillip',
+              'password': 'Phillip'
+            }
+          };
+        // login via form and save session info
+          requestWithSession(options, function(error, res, body) {
+            done();
+          });
+        });
+      });
 
       var options = {
         'method': 'POST',

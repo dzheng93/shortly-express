@@ -64,7 +64,10 @@ function(req, res) {
     res.redirect('/login');
   } else {
     Links.reset().fetch().then(function(links) {
-      res.status(200).send(links.models);
+      var correctLinks = links.models.filter(function(model) {
+        return model.get('userid') === req.session.userId;
+      });
+      res.status(200).send(correctLinks);
     });
   }
 });
@@ -87,18 +90,23 @@ function(req, res) {
           console.log('Error reading URL heading: ', err);
           return res.sendStatus(404);
         }
-
-        Links.create({
-          url: uri,
-          title: title,
-          baseUrl: req.headers.origin
-        })
-        .then(function(newLink) {
-          res.status(200).send(newLink);
-        })
-        .catch(function(error) {
-          console.log(error);
-          res.status(400);
+        User.query('where', 'username', '=', req.session.username)
+        .fetch()
+        .then(function(model) {
+       
+          Links.create({
+            url: uri,
+            title: title,
+            baseUrl: req.headers.origin,
+            userId: model.get('id')
+          })
+          .then(function(newLink) {
+            res.status(200).send(newLink);
+          })
+          .catch(function(error) {
+            console.log(error);
+            res.status(400);
+          });
         });
       });
     }
@@ -137,6 +145,7 @@ app.post('/login', function(req, res) {
        if (hashedPass === passTest) {
          res.status(201);
          req.session.username = username;
+         req.session.userId = model.get('id');
          res.location('/');
          res.redirect('/');
 
@@ -167,8 +176,8 @@ app.post('/signup', function(req, res) {
   new User({username: username }).fetch()
   .then(function(found) {
     if (found) {
-      alert('Account already exists');
-      res.redirect('/signup');
+      console.log('Account already exists');
+      res.redirect('/login');
     } else {
       Users.create({
         username: username,
@@ -179,6 +188,7 @@ app.post('/signup', function(req, res) {
 
         res.status(201);
         req.session.username = username;
+        req.session.userId = newUser.get('id');
         res.location('/');
         res.redirect('/');
 
