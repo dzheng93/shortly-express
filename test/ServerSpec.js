@@ -6,6 +6,7 @@ var Users = require('../app/collections/users');
 var User = require('../app/models/user');
 var Links = require('../app/collections/links');
 var Link = require('../app/models/link');
+var use;
 
 /************************************************************/
 // Mocha doesn't have a way to designate pending before blocks.
@@ -68,7 +69,8 @@ describe('', function() {
       new User({
         'username': 'Phillip',
         'password': 'Phillip'
-      }).save().then(function() {
+      }).save().then(function(user) {
+        use = user;
         var options = {
           'method': 'POST',
           'followAllRedirects': true,
@@ -180,7 +182,8 @@ describe('', function() {
         link = new Link({
           url: 'http://roflzoo.com/',
           title: 'Funny pictures of animals, funny dog pictures',
-          baseUrl: 'http://127.0.0.1:4568'
+          baseUrl: 'http://127.0.0.1:4568',
+          userId: use.id
         });
         link.save().then(function() {
           done();
@@ -217,7 +220,7 @@ describe('', function() {
         });
       });
 
-      xit('Returns all of the links to display on the links page', function(done) {
+      it('Returns all of the links to display on the links page', function(done) {
         var options = {
           'method': 'GET',
           'uri': 'http://127.0.0.1:4568/links'

@@ -5,6 +5,10 @@ var bodyParser = require('body-parser');
 var redirect = require('express-redirect');
 var session = require('express-session');
 var bcrypt = require('bcrypt-nodejs');
+var passport = require('passport');
+var LocalStrat = require('passport-local').Strategy;
+// var GitHubStrategy = require('passport-github2').Strategy;
+
 
 
 var db = require('./app/config');
@@ -20,7 +24,33 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.use(partials());
 
-// app.use(redirect);
+// var GITHUB_CLIENT_ID = "--insert-github-client-id-here--";
+// var GITHUB_CLIENT_SECRET = "--insert-github-client-secret-here--";
+passport.use(new LocalStrat(
+  {
+    usernameField: 'username',
+    passwordField: 'password'
+  },
+  function(username, password, done) {
+    new User().where({username: username, password: password }).fetch()
+    .then(function(user) {
+      if (user === null) {
+        return done(null, false, {message: 'incorrect username or password'});
+      }
+      done(null, user.JSON());
+    });
+
+  }
+  ));
+// passport.serializeUser(function(user, done) {
+//   done(null, user);
+// });
+
+// passport.deserializeUser(function(obj, done) {
+//   done(null, obj);
+// });
+
+
 app.use(session({
   name: 'shortly sess',
   secret: 'coding things',
@@ -28,6 +58,8 @@ app.use(session({
   saveUninitialized: true,
 
 }));
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Parse JSON (uniform resource locators)
 app.use(bodyParser.json());
@@ -45,8 +77,8 @@ var checkUser = function(res, req) {
   }
 };
 
-app.get('/', 
-function(req, res) {
+ 
+app.get('/', function(req, res) {
   checkUser(res, req);
 });
 
@@ -129,6 +161,7 @@ app.get('/login', function(req, res) {
 app.post('/login', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
+
 
   User.query('where', 'username', '=', username)
    .fetch()
